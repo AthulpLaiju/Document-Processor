@@ -48,4 +48,6 @@ Start backend API:
 
 cd backend  
 command:uvicorn app:app --reload
-Start Streamlit frontend:streamlit run frontend_app.py
+
+Start Streamlit frontend:
+streamlit run frontend_app.py
