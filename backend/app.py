@@ -4,7 +4,6 @@ from agent.agentic import process_court_order
 import fitz  # PyMuPDF
 import sys
 import os
-
 # Add the project root (parent of backend/) to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
