@@ -18,12 +18,13 @@ Uses LangGraph for workflow automation
 
 Built with FastAPI backend and Streamlit frontend
 
-Technology Stack
+**Technology Stack**
+
 Python 3.10
 
 PyMuPDF for PDF OCR
 
-OpenAI or Falcon for field extraction
+OpenAI for field extraction
 
 LangGraph for workflow handling
 
@@ -31,20 +32,8 @@ FastAPI as backend server
 
 Streamlit as frontend interface
 
-Project Directory Structure
-Copy
-Edit
-agent/
-  agentic.py
-  actions.csv
-  customer.csv
-backend/
-  app.py
-ocr.py
-streamtemp.py
-requirements.txt
-README.md
-Setup Instructions
+
+**Setup Instructions**
 Clone the repository:
 git clone https://github.com/yourusername/pdf-court-order-processor.git
 cd pdf-court-order-processor
@@ -57,14 +46,6 @@ Make sure Python version is 3.10 or higher
 Running the Application
 Start backend API:
 
-bash
-Copy
-Edit
 cd backend  
-uvicorn app:app --reload
-Start Streamlit frontend:
-
-bash
-Copy
-Edit
-streamlit run streamtemp.py
+command:uvicorn app:app --reload
+Start Streamlit frontend:streamlit run frontend_app.py
