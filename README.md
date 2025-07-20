@@ -1,6 +1,6 @@
 **Court Order PDF Processor**
 
-This project processes scanned court order PDFs using OCR and AI to extract important fields like National ID and Action. It validates the extracted data and decides whether to execute or discard the request. The system uses OpenAI or Falcon models and LangGraph for automated decision-making.
+This project processes scanned court order PDFs using OCR and AI to extract important fields like National ID and Action. It validates the extracted data and decides whether to execute or discard the request. The system uses OpenAI and LangGraph for automated decision-making.
 
 **Project Features**
 
