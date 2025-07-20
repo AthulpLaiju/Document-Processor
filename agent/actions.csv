@@ -1,0 +1,4 @@
+action_name,description
+release_funds,Release all held or restricted funds back to the customer account
+freeze_funds,Freeze all funds in the customer account
+
