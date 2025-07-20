@@ -6,7 +6,7 @@ from typing import TypedDict, Optional
 import difflib
 
 # Initialize OpenAI client
-client = OpenAI(api_key="Your OpenAI Key")
+# client = OpenAI(api_key="Your OpenAI Key")
 
 # Define the state schema
 class State(TypedDict):
