@@ -5,7 +5,7 @@ from langgraph.graph import StateGraph, END
 from typing import TypedDict, Optional
 import difflib
 
-# Initialize OpenAI client
+# Initialize OpenAI clien
 
 
 # Define the state schema
