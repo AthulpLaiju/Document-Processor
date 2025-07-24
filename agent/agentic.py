@@ -9,8 +9,6 @@ import difflib
 api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
 
-
-
 # Define the state schema
 class State(TypedDict):
     text: Optional[str]
@@ -21,14 +19,9 @@ class State(TypedDict):
     result: Optional[str]
     error: Optional[str]
     customer_id: Optional[str]
+    dummy:Optional[str]
 
-# CSV load utility
-def load_csv_column(path, key):
-    with open(path, newline='', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        return [row[key].strip() for row in reader if row.get(key)]
-
-# Load customer map: national_id -> customer_id
+# CSV loading utilities
 def load_customer_map(path):
     with open(path, newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -38,7 +31,6 @@ def load_customer_map(path):
             if row.get("national_id") and row.get("customer_id")
         }
 
-# Load action map: action_name -> description
 def load_action_map(path):
     with open(path, newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -46,19 +38,18 @@ def load_action_map(path):
             row["action_name"].strip().lower(): row["description"].strip()
             for row in reader if row.get("action_name") and row.get("description")
         }
+
+# Load CSVs
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 customer_csv_path = os.path.join(BASE_DIR, "customer.csv")
 actions_csv_path = os.path.join(BASE_DIR, "actions.csv")
 
 customer_map = load_customer_map(customer_csv_path)
 action_map = load_action_map(actions_csv_path)
-#Load CSVs
-# customer_map = load_customer_map("agent/customer.csv")
-# action_map = load_action_map("agent/actions.csv")
 
-# Node: Extract info from text using GPT (clean and direct)
+# Node: Extract fields from court order using LLM
 def extract_fields_from_text(state: State) -> State:
-    extraction_prompt = f"""
+    prompt = f"""
 You are reading a court order document.
 
 Extract the following fields:
@@ -78,11 +69,10 @@ Respond strictly in this format:
 National ID: <value>
 Action: <value>
 """
-
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": extraction_prompt}],
+            messages=[{"role": "user", "content": prompt}],
             temperature=0,
         )
         answer = response.choices[0].message.content.strip()
@@ -100,77 +90,71 @@ Action: <value>
 
     return state
 
-
-CUSTOMER_CSV_PATH = os.path.join(os.path.dirname(__file__), "customer.csv")
-
-# Load customer.csv only once at the start
-def load_customer_map():
-    customer_map = {}
-    with open(CUSTOMER_CSV_PATH, mode='r', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            customer_map[row['national_id'].strip()] = row['customer_id'].strip()
-    return customer_map
-
-customer_map = load_customer_map()
-
+# Node: Validate customer from national ID
 def validate_customer(state: State) -> State:
     national_id = state.get("national_id", "").strip()
-    print(f"[DEBUG] National ID from state: '{national_id}'")
-
-    print(f"[DEBUG] Keys in customer_map: {list(customer_map.keys())}")
-
     if national_id in customer_map:
         state["customer_id"] = customer_map[national_id]
-        print(f"[DEBUG] Match found: Customer ID = {state['customer_id']}")
     else:
         state["status"] = "discarded"
         state["error"] = f"Person with National ID {national_id} is not a customer"
-        print(f"[DEBUG] No match found. Order discarded.")
-
     return state
 
-# Node: Validate action
+# Node: Validate and match action
 def validate_action(state: State) -> State:
     extracted_action = state.get("action", "").lower().strip()
-    print(f"\n Extracted action (input): '{extracted_action}'")
 
     best_match = None
     best_score = 0.0
 
-    print(" Matching against known actions:")
     for action_key, description in action_map.items():
         score = difflib.SequenceMatcher(None, extracted_action, description.lower()).ratio()
-        print(f"  - Comparing with '{description}' → Score: {score:.4f}")
         if score > best_score:
             best_score = score
             best_match = action_key
 
-    print(f"\n Best Match: '{best_match}' with Score: {best_score:.4f}")
-
-    if best_score > 0.6:  # Adjust threshold if needed
-        print(f" Match accepted. Updating action to '{best_match}'")
+    if best_score > 0.6:
         state["action"] = best_match
     else:
-        print(f" No acceptable match found. Marking action as invalid.")
         state["status"] = "discardaction"
         state["error"] = f"Action '{extracted_action}' is not recognized or allowed"
 
     return state
 
-#  Node: Execute the action (simulate)
+# Node: Simulate execution
 def execute_action(state: State) -> State:
     state["status"] = "executed"
     state["result"] = f"Action '{state.get('action')}' executed for Customer ID: {state.get('customer_id')}"
     return state
 
-#  Build the LangGraph
+# Node: Dummy action simulation
+def perform_dummy_action(state: State) -> State:
+    action = state.get("action")
+    customer_id = state.get("customer_id")
+
+    if not action or not customer_id:
+        state["status"] = "error"
+        state["error"] = "Missing action or customer_id for dummy execution"
+        return state
+
+    if action == "freeze_funds_pass":
+        result = f"[Dummy] Funds frozen for customer {customer_id}"
+    elif action == "release_funds_pass":
+        result = f"[Dummy] Funds released for customer {customer_id}"
+    else:
+        result = f"[Dummy] Unknown action '{action}' for customer {customer_id}"
+
+    state["dummy"] = "dummy_executed"
+    return state  #  return the (possibly unchanged) state
+
+# LangGraph: Build the graph
 workflow = StateGraph(State)
 
 workflow.add_node("extract_fields", extract_fields_from_text)
 workflow.add_node("validate_customer", validate_customer)
 workflow.add_node("validate_action", validate_action)
 workflow.add_node("execute_action", execute_action)
+workflow.add_node("perform_dummy_action", perform_dummy_action)
 
 workflow.set_entry_point("extract_fields")
 workflow.add_edge("extract_fields", "validate_customer")
@@ -180,7 +164,7 @@ workflow.add_conditional_edges(
     lambda state: "validate_action" if state.get("status") is None else END,
     {
         "validate_action": "validate_action",
-        END: END
+        END: END,
     }
 )
 
@@ -189,16 +173,16 @@ workflow.add_conditional_edges(
     lambda state: "execute_action" if state.get("status") is None else END,
     {
         "execute_action": "execute_action",
-        END: END
+        END: END,
     }
 )
 
-workflow.add_edge("execute_action", END)
+workflow.add_edge("execute_action", "perform_dummy_action")
+workflow.add_edge("perform_dummy_action", END)
 
-#  Compile app
+# Compile the graph
 app = workflow.compile()
 
-# FastAPI calls this
+# Public function to invoke
 def process_court_order(text: str) -> State:
-    state = {"text": text}
-    return app.invoke(state)
+    return app.invoke({"text": text})

@@ -7,7 +7,7 @@ st.title("🏛️ Court Order Document Processor")
 st.markdown(
     """
     <style>
-    /* Base background and text */
+    /* Base dark background and fonts */
     html, body, [class*="stApp"] {
         background-color: #0d1117;
         color: #c9d1d9;
@@ -19,7 +19,7 @@ st.markdown(
         color: #f0f6fc;
     }
 
-    /* Markdown text blocks */
+    /* Text Blocks */
     .stMarkdown, .stText, .stSubheader {
         background-color: #161b22;
         color: #c9d1d9;
@@ -29,17 +29,24 @@ st.markdown(
         margin-bottom: 1rem;
     }
 
-    /* Buttons */
+    /* Primary Button */
     button[kind="primary"] {
-        background-color: #238636 !important;
-        color: #ffffff !important;
+        background-color: transparent !important;
+        color: #f85149 !important;
+        border: 2px solid #f85149 !important;
         border-radius: 8px;
         font-weight: bold;
         padding: 0.6em 1.2em;
-        border: none;
+        transition: all 0.3s ease;
     }
 
-    /* File uploader */
+    button[kind="primary"]:hover {
+        background-color: #8b0000 !important;
+        color: white !important;
+        transform: scale(1.03);
+    }
+
+    /* File uploader box */
     .stFileUploader > div:first-child {
         background-color: #161b22;
         border: 2px dashed #30363d;
@@ -56,14 +63,35 @@ st.markdown(
         border-radius: 6px !important;
     }
 
-    /* Optional: Sidebar if used */
+    /* Sidebar (if used) */
     .css-1d391kg, .css-1lcbmhc {
         background-color: #0d1117 !important;
+    }
+
+    /* Warning alert customization */
+    .stAlert[data-testid="stAlert-warning"] {
+        background-color: #b08900;
+        color: white;
+        border: 1px solid #f2cc60;
+    }
+
+    /* Section separator for 'Processing Outcome' */
+    h2:has-text("Processing Outcome") {
+        border-top: 1px solid #30363d;
+        padding-top: 1rem;
+        margin-top: 2rem;
+    }
+
+    /* Smooth font rendering */
+    html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
+
 
 
 
